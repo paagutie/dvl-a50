@@ -6,15 +6,18 @@ This repository contains a plugin for the use of the [Water Linked](https://stor
 ## Requirements
 * [ROS2](https://docs.ros.org/en/foxy/Installation.html) - Foxy
 - Ubuntu 20.04
+- [dvl_msgs](https://github.com/MARUM-MUtTI/dvl_msgs)
 
 
 ## Installation
-- Clone the repository and compile it.
+- Clone the repositories and compile them:
 ```
-$ cd ~
-$ git clone https://github.com/MARUM-MUtTI/dvl-a50.git
-$ cd dvl-a50
 $ source /opt/ros/foxy/setup.bash
+$ mkdir -p ~/ros2_ws/src
+$ cd ~/ros2_ws/src
+$ git clone https://github.com/MARUM-MUtTI/dvl_msgs.git
+$ git clone --recurse-submodules https://github.com/MARUM-MUtTI/dvl-a50.git
+$ cd ..
 $ colcon build
 ```
 
@@ -26,14 +29,16 @@ There are three ways to use this package. The first one uses a python script, th
 #### Python
 - To use the python script open a new terminal to run the node:
 ```
-$ source install/local_setup.bash
+$ cd ~/ros2_ws
+$ source install/setup.bash
 $ ros2 run dvl_a50 dvl_a50.py
 ```
 
 #### C++ 
 - To use the C++ node: 
 ```
-$ source install/local_setup.bash
+$ cd ~/ros2_ws
+$ source install/setup.bash
 $ ros2 run dvl_a50 dvl_a50_sensor
 ```
 #### Lifecycle management 
@@ -42,11 +47,13 @@ ROS 2 introduces the concept of managed nodes, also called LifecycleNodes. Manag
 - The node must first be launched using composition. This allows multiple nodes to be executed in a single process with lower overhead and, optionally, more efficient communication (see [Intra Process Communication](https://docs.ros.org/en/foxy/Tutorials/Intra-Process-Communication.html)). The idea of using composition is to be able to make use of its advantages when integrating more than one node, which is the case of a robotic system.
 
 ```
-$ source install/local_setup.bash
+$ cd ~/ros2_ws
+$ source install/setup.bash
 $ ros2 launch dvl_a50 dvl_composition.launch.py
 ```
 - Then in a new terminal the initial options can be viewed using Lifecycle. To know the available transitions:
 ```
+$ source /opt/ros/foxy/setup.bash
 $ ros2 lifecycle list /dvl_a50_node
 
 - configure [1]
