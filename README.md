@@ -7,7 +7,7 @@ This repository contains a plugin for the use of the [Water Linked](https://stor
 * [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic
 - Ubuntu 20.04
 
-## Dependencies
+### Dependencies
 - [dvl_msgs](https://github.com/MARUM-MUtTI/dvl_msgs)
 - [JSON for Modern C++](https://github.com/nlohmann/json)
 
@@ -15,7 +15,7 @@ This repository contains a plugin for the use of the [Water Linked](https://stor
 ## Installation
 - Clone the repositories and compile them:
 ```
-$ source /opt/ros/foxy/setup.bash
+$ source /opt/ros/galactic/setup.bash
 $ mkdir -p ~/ros2_ws/src
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/MARUM-MUtTI/dvl_msgs.git
@@ -56,7 +56,7 @@ $ ros2 launch dvl_a50 dvl_composition.launch.py
 ```
 - Then in a new terminal the initial options can be viewed using Lifecycle. To know the available transitions:
 ```
-$ source /opt/ros/foxy/setup.bash
+$ source /opt/ros/galactic/setup.bash
 $ ros2 lifecycle list /dvl_a50_node
 
 - configure [1]
