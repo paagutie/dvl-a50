@@ -4,9 +4,12 @@
 This repository contains a plugin for the use of the [Water Linked](https://store.waterlinked.com/product/dvl-a50/) DVL-A50 sensor in ROS2 with the advantage of making use of its new tools such as composition and Lifecycle management.
 
 ## Requirements
-* [ROS2](https://docs.ros.org/en/foxy/Installation.html) - Foxy
+* [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic
 - Ubuntu 20.04
+
+## Dependencies
 - [dvl_msgs](https://github.com/MARUM-MUtTI/dvl_msgs)
+- [JSON for Modern C++](https://github.com/nlohmann/json)
 
 
 ## Installation
