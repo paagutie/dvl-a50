@@ -27,7 +27,9 @@ namespace composition
 
 
 LifecycleDVL::LifecycleDVL(const rclcpp::NodeOptions & options)
-: rclcpp_lifecycle::LifecycleNode("dvl_a50_node", options)
+: rclcpp_lifecycle::LifecycleNode("dvl_a50_node", options),
+current_altitude(0.0),
+old_altitude(0.0)
 {
 
 }
@@ -207,8 +209,16 @@ void LifecycleDVL::on_timer()
 		dvl.velocity.y = double(json_data["vy"]);
 		dvl.velocity.z = double(json_data["vz"]);
 		dvl.fom = double(json_data["fom"]);
-		dvl.altitude = double(json_data["altitude"]);
+                current_altitude = double(json_data["altitude"]);
 		dvl.velocity_valid = json_data["velocity_valid"];
+		    
+		if(current_altitude >= 0.0 && dvl.velocity_valid)
+		{
+		    dvl.altitude = current_altitude;
+		    old_altitude = current_altitude;
+		}
+		else
+		    dvl.altitude = old_altitude;
 
 
 		dvl.status = json_data["status"];

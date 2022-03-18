@@ -12,7 +12,9 @@ namespace dvl_sensor {
 
 
 DVL_A50::DVL_A50():
-Node("dvl_a50_node")
+Node("dvl_a50_node"),
+current_altitude(0.0),
+old_altitude(0.0)
 {
     timer_ros = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&DVL_A50::timerCallback, this)); 
     dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", 10);
@@ -117,8 +119,16 @@ void DVL_A50::timerCallback()
 		    dvl.velocity.y = double(json_data["vy"]);
 		    dvl.velocity.z = double(json_data["vz"]);
 		    dvl.fom = double(json_data["fom"]);
-		    dvl.altitude = double(json_data["altitude"]);
+		    current_altitude = double(json_data["altitude"]);
 		    dvl.velocity_valid = json_data["velocity_valid"];
+		    
+		    if(current_altitude >= 0.0 && dvl.velocity_valid)
+		    {
+		        dvl.altitude = current_altitude;
+		        old_altitude = current_altitude;
+		    }
+		    else
+		        dvl.altitude = old_altitude;
 
 
 		    dvl.status = json_data["status"];

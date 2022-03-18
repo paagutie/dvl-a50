@@ -53,6 +53,8 @@ public:
 private:
     int fault = 1; 
     string delimiter = ",";
+    double current_altitude;
+    double old_altitude;
     TCPSocket *tcpSocket;
     
     nlohmann::json json_data;
