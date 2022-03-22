@@ -20,9 +20,12 @@ old_altitude(0.0)
     dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", 10);
     dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", 10);
     
+    this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");   
+    ip_address = this->get_parameter("dvl_ip_address").as_string();
+    RCLCPP_INFO(get_logger(), "IP_ADDRESS: '%s'", ip_address.c_str());
 
     //--- TCP/IP SOCKET ---- 
-    tcpSocket = new TCPSocket((char*)"192.168.194.95" , 16171);
+    tcpSocket = new TCPSocket((char*)ip_address.c_str() , 16171);
     
     if(tcpSocket->Create() < 0)
     	std::cout << "Socket creation error" << std::endl;

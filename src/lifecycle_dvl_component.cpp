@@ -31,7 +31,9 @@ LifecycleDVL::LifecycleDVL(const rclcpp::NodeOptions & options)
 current_altitude(0.0),
 old_altitude(0.0)
 {
-
+    this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");   
+    ip_address = this->get_parameter("dvl_ip_address").as_string();
+    RCLCPP_INFO(get_logger(), "IP_ADDRESS: '%s'", ip_address.c_str());
 }
 
 LifecycleDVL::~LifecycleDVL() {
@@ -53,7 +55,7 @@ LifecycleDVL::on_configure(const rclcpp_lifecycle::State &)
     
 
     //--- TCP/IP SOCKET ---- 
-    tcpSocket = new TCPSocket((char*)"192.168.194.95" , 16171);
+    tcpSocket = new TCPSocket((char*)ip_address.c_str() , 16171);
     
     if(tcpSocket->Create() < 0)
     {

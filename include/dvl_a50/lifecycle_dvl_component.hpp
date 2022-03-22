@@ -113,6 +113,7 @@ private:
   int fault = 1; 
   double current_altitude;
   double old_altitude;
+  std::string ip_address;
   TCPSocket *tcpSocket;
     
   nlohmann::json json_data;
