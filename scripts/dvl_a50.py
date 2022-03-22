@@ -31,7 +31,9 @@ class DVL_A50(Node):
     #Constructor
     def __init__(self):
         super().__init__('dvl_a50_node')
-        #self.euler_publisher_ = self.create_publisher(Vector3Stamped, '/euler/data', 10)
+        self.declare_parameter('ip_address', '192.168.194.95')
+        self.my_param = self.get_parameter('ip_address').get_parameter_value().string_value
+        self.get_logger().info('IP_ADDRESS: %s' % self.my_param)
         self.dvl_publisher_ = self.create_publisher(DVL, '/dvl/data', 10)
         self.dvl_publisher_pos = self.create_publisher(DVLDR, '/dvl/position', 10)
         timer_period = 0.05  # seconds -> 10Hz
@@ -40,6 +42,8 @@ class DVL_A50(Node):
         self.stamp = self.get_clock().now().to_msg()
         self.data = None
         self.oldJson = ""
+        self.current_altitude = 0.0
+        self.old_altitude = 0.0
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.get_logger().info("Connecting...")
         self.connect()
@@ -54,7 +58,7 @@ class DVL_A50(Node):
 	#SOCKET
     def connect(self):
         try:
-            server_address = ('192.168.194.95', 16171)
+            server_address = (self.my_param, 16171)
             self.sock.connect(server_address)
             self.sock.settimeout(1)
             self.get_logger().info("Socket is connected")
@@ -114,8 +118,14 @@ class DVL_A50(Node):
             theDVL.velocity.y = float(data["vy"])
             theDVL.velocity.z = float(data["vz"])
             theDVL.fom = float(data["fom"])
-            theDVL.altitude = float(data["altitude"])
+            self.current_altitude = float(data["altitude"])
             theDVL.velocity_valid = data["velocity_valid"]
+            
+            if self.current_altitude >= 0.0 && theDVL.velocity_valid:
+                theDVL.altitude = self.current_altitude
+                self.old_altitude = self.current_altitude
+            else:
+                theDVL.altitude = self.old_altitude
 
 
             theDVL.status = data["status"]
