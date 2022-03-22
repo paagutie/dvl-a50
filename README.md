@@ -4,7 +4,7 @@
 This repository contains a plugin for the use of the [Water Linked](https://store.waterlinked.com/product/dvl-a50/) DVL-A50 sensor in ROS2 with the advantage of making use of its new tools such as composition and Lifecycle management.
 
 ## Requirements
-* [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic
+- [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic
 - Ubuntu 20.04
 
 ### Dependencies
@@ -34,7 +34,7 @@ There are three ways to use this package. The first one uses a python script, th
 ```
 $ cd ~/ros2_ws
 $ source install/setup.bash
-$ ros2 run dvl_a50 dvl_a50.py
+$ ros2 run dvl_a50 dvl_a50.py --ros-args -p ip_address:='192.168.194.95'
 ```
 
 #### C++ 
@@ -42,7 +42,7 @@ $ ros2 run dvl_a50 dvl_a50.py
 ```
 $ cd ~/ros2_ws
 $ source install/setup.bash
-$ ros2 run dvl_a50 dvl_a50_sensor
+$ ros2 run dvl_a50 dvl_a50_sensor ip_address:='192.168.194.95'
 ```
 #### Lifecycle management 
 ROS 2 introduces the concept of managed nodes, also called LifecycleNodes. Managed nodes contain a state machine with a set of predefined states. These states can be changed by invoking a transition id which indicates the succeeding consecutive state.
@@ -52,7 +52,7 @@ ROS 2 introduces the concept of managed nodes, also called LifecycleNodes. Manag
 ```
 $ cd ~/ros2_ws
 $ source install/setup.bash
-$ ros2 launch dvl_a50 dvl_composition.launch.py
+$ ros2 launch dvl_a50 dvl_composition.launch.py ip_address:='192.168.194.95'
 ```
 - Then in a new terminal the initial options can be viewed using Lifecycle. To know the available transitions:
 ```
