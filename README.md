@@ -42,7 +42,9 @@ $ ros2 run dvl_a50 dvl_a50.py --ros-args -p ip_address:='192.168.194.95'
 ```
 $ cd ~/ros2_ws
 $ source install/setup.bash
-$ ros2 run dvl_a50 dvl_a50_sensor ip_address:='192.168.194.95'
+$ ros2 run dvl_a50 dvl_a50_sensor --ros-args -p dvl_ip_address:='192.168.2.95'
+or
+$ ros2 launch dvl_a50 dvl_a50.launch.py ip_address:='192.168.194.95'
 ```
 #### Lifecycle management 
 ROS 2 introduces the concept of managed nodes, also called LifecycleNodes. Managed nodes contain a state machine with a set of predefined states. These states can be changed by invoking a transition id which indicates the succeeding consecutive state.
