@@ -8,7 +8,7 @@ This repository contains a plugin for the use of the [Water Linked](https://stor
 - Ubuntu 20.04
 
 ### Dependencies
-- [dvl_msgs](https://gitlab.marum.de/MUtTI/dvl_msgs)
+- [dvl_msgs](https://github.com/MARUM-MUtTI/dvl_msgs.git)
 - [JSON for Modern C++](https://github.com/nlohmann/json)
 
 
@@ -18,8 +18,8 @@ This repository contains a plugin for the use of the [Water Linked](https://stor
 $ source /opt/ros/galactic/setup.bash
 $ mkdir -p ~/ros2_ws/src
 $ cd ~/ros2_ws/src
-$ git clone https://gitlab.marum.de/MUtTI/dvl_msgs.git
-$ git clone --recurse-submodules https://gitlab.marum.de/MUtTI/dvl-a50.git
+$ git clone https://github.com/MARUM-MUtTI/dvl_msgs.git
+$ git clone --recurse-submodules https://github.com/MARUM-MUtTI/dvl-a50.git
 $ cd ..
 $ colcon build
 ```
