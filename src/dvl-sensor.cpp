@@ -16,9 +16,18 @@ Node("dvl_a50_node"),
 current_altitude(0.0),
 old_altitude(0.0)
 {
+	rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+
+	auto qos = rclcpp::QoS(
+		rclcpp::QoSInitialization(
+			qos_profile.history,
+			qos_profile.depth
+		),
+		qos_profile);
+
     timer_ros = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&DVL_A50::timerCallback, this)); 
-    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", 10);
-    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", 10);
+    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", qos);
+    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", qos);
     
     this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");   
     ip_address = this->get_parameter("dvl_ip_address").as_string();
@@ -28,7 +37,7 @@ old_altitude(0.0)
     tcpSocket = new TCPSocket((char*)ip_address.c_str() , 16171);
     
     if(tcpSocket->Create() < 0)
-    	std::cout << "Socket creation error" << std::endl;
+        RCLCPP_ERROR(get_logger(), "Error creating the socket");
    
     tcpSocket->SetRcvTimeout(400);
     std::string error;
@@ -43,8 +52,7 @@ old_altitude(0.0)
         fault = tcpSocket->Connect(5000, error, error_code);
         if(error_code == 114)
         {
-            std::cout << error << std::endl;
-            std::cout << "Is the sensor on?" << std::endl;
+            RCLCPP_WARN(get_logger(), "Is the sensor on? error_code: %d", error_code);
             usleep(2000000);
             std::chrono::steady_clock::time_point current_time_error = std::chrono::steady_clock::now();
     	    double dt = std::chrono::duration<double>(current_time_error - first_time_error).count();
@@ -56,8 +64,7 @@ old_altitude(0.0)
         }
         else if(error_code == 103)
         {
-            std::cout << error << std::endl;
-            std::cout << "No route to host, DVL might be booting?" << std::endl;
+            RCLCPP_WARN(get_logger(), "No route to host, DVL might be booting?: error_code: %d", error_code);
             usleep(2000000);
         }
     }  
@@ -70,10 +77,10 @@ old_altitude(0.0)
     if(fault == -10)
     {
         tcpSocket->Close();
-        std::cout << "Turn the sensor on and try again!" << std::endl;
+        RCLCPP_ERROR(get_logger(), "Turn the sensor on and try again!");
     }
     else
-        std::cout << "DVL-A50 connected!" << std::endl;
+        RCLCPP_INFO(get_logger(), "DVL-A50 connected!");
     
     
     usleep(2000);
@@ -194,7 +201,7 @@ void DVL_A50::timerCallback()
 	    }
 	    catch(std::exception& e)
 	    {
-		std::cout << "Exception: " << e.what() << std::endl;
+		    std::cout << "Exception: " << e.what() << std::endl;
 	    } 
 	    
     } 
