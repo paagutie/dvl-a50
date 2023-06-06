@@ -4,8 +4,8 @@
 This repository contains a plugin for the use of the [Water Linked](https://store.waterlinked.com/product/dvl-a50/) DVL-A50 sensor in ROS2 with the advantage of making use of its new tools such as composition and Lifecycle management.
 
 ## Requirements
-- [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic
-- Ubuntu 20.04
+- [ROS2](https://docs.ros.org/en/galactic/Installation.html) - Galactic or newer
+- Ubuntu 20.04 or newer
 
 ### Dependencies
 - [dvl_msgs](https://github.com/paagutie/dvl_msgs)
@@ -46,7 +46,7 @@ $ ros2 run dvl_a50 dvl_a50_sensor --ros-args -p dvl_ip_address:='192.168.2.95'
 or
 $ ros2 launch dvl_a50 dvl_a50.launch.py ip_address:='192.168.194.95'
 ```
-#### Lifecycle management 
+#### Lifecycle management (deprecated)
 ROS 2 introduces the concept of managed nodes, also called LifecycleNodes. Managed nodes contain a state machine with a set of predefined states. These states can be changed by invoking a transition id which indicates the succeeding consecutive state.
 
 - The node must first be launched using composition. This allows multiple nodes to be executed in a single process with lower overhead and, optionally, more efficient communication (see [Intra Process Communication](https://docs.ros.org/en/foxy/Tutorials/Intra-Process-Communication.html)). The idea of using composition is to be able to make use of its advantages when integrating more than one node, which is the case of a robotic system.
@@ -91,5 +91,9 @@ $ ros2 lifecycle set /dvl_a50_node shutdown
 ## ROS2 Topics 
 - `/dvl/data`
 - `/dvl/position`
+- `dvl/config/status`
+- `dvl/command/response`
+- `dvl/config/command`
+#### Lifecycle management
 - `/dvl_a50_node/transition_event`
 
