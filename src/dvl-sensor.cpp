@@ -14,14 +14,13 @@ DVL_A50::DVL_A50():
 Node("dvl_a50_node"),
 old_altitude(0.0)
 {
-	rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 
-	auto qos = rclcpp::QoS(
-		rclcpp::QoSInitialization(
-			qos_profile.history,
-			qos_profile.depth
-		),
-		qos_profile);
+    auto qos = rclcpp::QoS(
+            rclcpp::QoSInitialization(
+            qos_profile.history,
+            qos_profile.depth),
+            qos_profile);
 
     timer_receive = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&DVL_A50::handle_receive, this));
 
@@ -33,11 +32,11 @@ old_altitude(0.0)
     dvl_sub_config_command = this->create_subscription<dvl_msgs::msg::ConfigCommand>("dvl/config/command", qos, std::bind(&DVL_A50::command_subscriber, this, _1));
 
     this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");
-	this->declare_parameter<std::string>("velocity_frame_id", "dvl_A50/velocity_link");
-	this->declare_parameter<std::string>("position_frame_id", "dvl_A50/position_link");
+    this->declare_parameter<std::string>("velocity_frame_id", "dvl_A50/velocity_link");
+    this->declare_parameter<std::string>("position_frame_id", "dvl_A50/position_link");
     
-	velocity_frame_id = this->get_parameter("velocity_frame_id").as_string();
-	position_frame_id = this->get_parameter("position_frame_id").as_string();
+    velocity_frame_id = this->get_parameter("velocity_frame_id").as_string();
+    position_frame_id = this->get_parameter("position_frame_id").as_string();
     ip_address = this->get_parameter("dvl_ip_address").as_string();
     RCLCPP_INFO(get_logger(), "IP_ADDRESS: '%s'", ip_address.c_str());
 
@@ -313,8 +312,8 @@ DVL_Parameters DVL_A50::resolveParameter(std::string param)
  */
 void DVL_A50::set_json_parameter(const std::string name, const std::string value)
 {
-	json message;
-	message["command"] = "set_config";
+    json message;
+    message["command"] = "set_config";
 
     switch (resolveParameter(name))
     {
@@ -322,12 +321,12 @@ void DVL_A50::set_json_parameter(const std::string name, const std::string value
             try
             {
                 message["parameters"]["speed_of_sound"] = (int)std::stoi(value);
-				this->send_parameter_to_sensor(message);
+                this->send_parameter_to_sensor(message);
             }
             catch(const std::exception& e)
-			{
+            {
                 RCLCPP_ERROR(get_logger(), "Invalid data type! error: %s", e.what());
-			}
+            }
             break;
 
         case acoustic_enabled:
@@ -336,12 +335,12 @@ void DVL_A50::set_json_parameter(const std::string name, const std::string value
                 bool data;
                 std::istringstream(value) >> std::boolalpha >> data;
                 message["parameters"]["acoustic_enabled"] = data;
-				this->send_parameter_to_sensor(message);
+                this->send_parameter_to_sensor(message);
             }
             catch(const std::exception& e)
-			{
+            {
                 RCLCPP_ERROR(get_logger(), "Invalid data type! error: %s", e.what());
-			}
+            }
             break;
 
         case dark_mode_enabled:
@@ -353,16 +352,16 @@ void DVL_A50::set_json_parameter(const std::string name, const std::string value
                 this->send_parameter_to_sensor(message);
             }
             catch(const std::exception& e)
-			{
+            {
                 RCLCPP_ERROR(get_logger(), "Invalid data type! error: %s", e.what());
-			}
+            }
             break;
 
         case mountig_rotation_offset:
             try
             {
                 message["parameters"]["mountig_rotation_offset"] = (double)std::stod(value);
-				this->send_parameter_to_sensor(message);
+                this->send_parameter_to_sensor(message);
             }
             catch(const std::exception& e)
             {
@@ -374,16 +373,16 @@ void DVL_A50::set_json_parameter(const std::string name, const std::string value
             try
             {
                 message["parameters"]["range_mode"] = value;
-				this->send_parameter_to_sensor(message);
+                this->send_parameter_to_sensor(message);
             }
             catch(const std::exception& e)
-			{
+            {
                 RCLCPP_ERROR(get_logger(), "Invalid data type! error: %s", e.what());
-			}
+            }
             break;
 
         default:
-		    RCLCPP_ERROR(get_logger(), "Invalid parameter!");
+            RCLCPP_ERROR(get_logger(), "Invalid parameter!");
             break;
     }
 
@@ -395,7 +394,7 @@ void DVL_A50::set_json_parameter(const std::string name, const std::string value
 void DVL_A50::send_parameter_to_sensor(const json &message)
 {
     std::string str = message.dump();
-	char* c = &*str.begin();
+    char* c = &*str.begin();
     tcpSocket->Send(c);
 }
 
