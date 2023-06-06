@@ -20,22 +20,29 @@
 #include "dvl_msgs/msg/dvl.hpp"
 #include "dvl_msgs/msg/dvl_beam.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
+#include "dvl_msgs/msg/config_command.hpp"
+#include "dvl_msgs/msg/command_response.hpp"
+#include "dvl_msgs/msg/config_status.hpp"
 
-//Json Library
 #include "dvl_a50/json/single_include/nlohmann/json.hpp"
 #include <iomanip>
-
-//from rov_msgs.msg import Control
-
-//#include "sensor_msgs/msg/imu.hpp"
-//#include "geometry_msgs/msg/vector3_stamped.hpp"
-
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 using std::string;
+using nlohmann::json;
+
 
 namespace dvl_sensor {
+
+enum DVL_Parameters {
+    speed_of_sound,
+    acoustic_enabled,
+    dark_mode_enabled,
+    mountig_rotation_offset,
+    range_mode,
+    invalid_param
+};
 
 class DVL_A50: public rclcpp::Node
 {
@@ -47,49 +54,40 @@ public:
     DVL_A50();
     ~DVL_A50();
 
-	//void init();
-
-
 private:
     int fault = 1; 
     string delimiter = ",";
-    double current_altitude;
     double old_altitude;
     std::string ip_address;
+    std::string velocity_frame_id;
+    std::string position_frame_id;
     TCPSocket *tcpSocket;
-    
-    nlohmann::json json_data;
-    nlohmann::json json_position;
+    json json_data;
+
+    DVL_Parameters resolveParameter(std::string param);
     
     std::chrono::steady_clock::time_point first_time;
     std::chrono::steady_clock::time_point first_time_error;
     
-    
-    // DVL message struct
-    dvl_msgs::msg::DVLBeam beam0;
-    dvl_msgs::msg::DVLBeam beam1;
-    dvl_msgs::msg::DVLBeam beam2;
-    dvl_msgs::msg::DVLBeam beam3;
-    
-    dvl_msgs::msg::DVLDR DVLDeadReckoning;
-    dvl_msgs::msg::DVL dvl;
-
-
-
-    rclcpp::TimerBase::SharedPtr timer_ros;
+    rclcpp::TimerBase::SharedPtr timer_receive;
+    rclcpp::TimerBase::SharedPtr timer_send;
     rclcpp::Publisher<dvl_msgs::msg::DVL>::SharedPtr dvl_pub_report;
     rclcpp::Publisher<dvl_msgs::msg::DVLDR>::SharedPtr dvl_pub_pos;
+    rclcpp::Publisher<dvl_msgs::msg::CommandResponse>::SharedPtr dvl_pub_command_response;
+    rclcpp::Publisher<dvl_msgs::msg::ConfigStatus>::SharedPtr dvl_pub_config_status;
+    rclcpp::Subscription<dvl_msgs::msg::ConfigCommand>::SharedPtr dvl_sub_config_command;
 
 
-    //rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-    //rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr euler_pub_; 
+    void handle_receive();
+    //Publish velocity and transducer report
+    void publish_vel_trans_report();
+    void publish_dead_reckoning_report();
+    void publish_config_status();
+    void publish_command_response();
 
-
-    void timerCallback();
-
-    void readData();
-    //void topic_callback(const rov_msgs::msg::Control::SharedPtr msg);
-
+    void command_subscriber(const dvl_msgs::msg::ConfigCommand::SharedPtr msg);
+    void set_json_parameter(const std::string name, const std::string value);
+    void send_parameter_to_sensor(const json &message);
 
 };
 
