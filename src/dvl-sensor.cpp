@@ -236,8 +236,8 @@ void DVL_A50::publish_command_response()
     dvl_msgs::msg::CommandResponse command_resp;
     command_resp.response_to = json_data["response_to"];
     command_resp.success = json_data["success"];
-    command_resp.error_message = json_data["result"];
-    command_resp.result = json_data["result"];
+    command_resp.error_message = json_data["error_message"];
+    command_resp.result = 0;
     command_resp.format = json_data["format"];
     command_resp.type = json_data["type"];
     dvl_pub_command_response->publish(command_resp);
