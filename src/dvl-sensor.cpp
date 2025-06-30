@@ -157,6 +157,9 @@ void DVL_A50::publish_vel_trans_report()
     dvl.header.frame_id = velocity_frame_id;
 		
     dvl.time = double(json_data["time"]);
+    dvl.time_of_validity = json_data["time_of_validity"].get<int64_t>();
+    dvl.time_of_transmission = json_data["time_of_transmission"].get<int64_t>();
+
     dvl.velocity.x = double(json_data["vx"]);
     dvl.velocity.y = double(json_data["vy"]);
     dvl.velocity.z = double(json_data["vz"]);
@@ -172,6 +175,22 @@ void DVL_A50::publish_vel_trans_report()
 
     dvl.status = json_data["status"];
     dvl.form = json_data["format"];
+
+    // Add covariance from message
+    std::vector<double> twistCovariance;
+
+    if (json_data.contains("covariance") && json_data["covariance"].is_array()) {
+        const auto& matrix = json_data["covariance"];
+        
+        for (const auto& row : matrix) {
+            if (!row.is_array()) continue;
+            for (const auto& value : row) {
+                twistCovariance.push_back(value.get<double>());
+            }
+        }
+    }
+
+    dvl.covariance = twistCovariance;
 			
     beam0.id = json_data["transducers"][0]["id"];
     beam0.velocity = double(json_data["transducers"][0]["velocity"]);
