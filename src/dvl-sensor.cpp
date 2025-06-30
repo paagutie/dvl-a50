@@ -11,8 +11,7 @@ namespace dvl_sensor {
 
 
 DVL_A50::DVL_A50():
-Node("dvl_a50_node"),
-old_altitude(0.0)
+Node("dvl_a50_node")
 {
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 
@@ -166,11 +165,10 @@ void DVL_A50::publish_vel_trans_report()
     dvl.fom = double(json_data["fom"]);
     double current_altitude = double(json_data["altitude"]);
     dvl.velocity_valid = json_data["velocity_valid"];
-		    
-    if(current_altitude >= 0.0 && dvl.velocity_valid)
-        old_altitude = dvl.altitude = current_altitude;
-    else
-        dvl.altitude = old_altitude;
+    
+    // Removed logic to add old altitude if not valid. Does not report accurately what is coming from the DVL.
+    // Logic should be implemented on a case by case basis.
+    dvl.altitude = current_altitude;
 
 
     dvl.status = json_data["status"];
