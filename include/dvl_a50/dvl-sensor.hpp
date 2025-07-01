@@ -57,7 +57,6 @@ public:
 private:
     int fault = 1; 
     string delimiter = ",";
-    double old_altitude;
     std::string ip_address;
     std::string velocity_frame_id;
     std::string position_frame_id;

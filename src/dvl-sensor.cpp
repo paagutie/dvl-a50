@@ -11,8 +11,7 @@ namespace dvl_sensor {
 
 
 DVL_A50::DVL_A50():
-Node("dvl_a50_node"),
-old_altitude(0.0)
+Node("dvl_a50_node")
 {
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 
@@ -157,21 +156,39 @@ void DVL_A50::publish_vel_trans_report()
     dvl.header.frame_id = velocity_frame_id;
 		
     dvl.time = double(json_data["time"]);
+    dvl.time_of_validity = json_data["time_of_validity"].get<int64_t>();
+    dvl.time_of_transmission = json_data["time_of_transmission"].get<int64_t>();
+
     dvl.velocity.x = double(json_data["vx"]);
     dvl.velocity.y = double(json_data["vy"]);
     dvl.velocity.z = double(json_data["vz"]);
     dvl.fom = double(json_data["fom"]);
     double current_altitude = double(json_data["altitude"]);
     dvl.velocity_valid = json_data["velocity_valid"];
-		    
-    if(current_altitude >= 0.0 && dvl.velocity_valid)
-        old_altitude = dvl.altitude = current_altitude;
-    else
-        dvl.altitude = old_altitude;
+    
+    // Removed logic to add old altitude if not valid. Does not report accurately what is coming from the DVL.
+    // Logic should be implemented on a case by case basis.
+    dvl.altitude = current_altitude;
 
 
     dvl.status = json_data["status"];
     dvl.form = json_data["format"];
+
+    // Add covariance from message
+    std::vector<double> twistCovariance;
+
+    if (json_data.contains("covariance") && json_data["covariance"].is_array()) {
+        const auto& matrix = json_data["covariance"];
+        
+        for (const auto& row : matrix) {
+            if (!row.is_array()) continue;
+            for (const auto& value : row) {
+                twistCovariance.push_back(value.get<double>());
+            }
+        }
+    }
+
+    dvl.covariance = twistCovariance;
 			
     beam0.id = json_data["transducers"][0]["id"];
     beam0.velocity = double(json_data["transducers"][0]["velocity"]);
