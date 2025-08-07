@@ -31,9 +31,21 @@ class DVL_A50(Node):
     #Constructor
     def __init__(self):
         super().__init__('dvl_a50_node')
-        self.declare_parameter('ip_address', '192.168.194.95')
-        self.my_param = self.get_parameter('ip_address').get_parameter_value().string_value
-        self.get_logger().info('IP_ADDRESS: %s' % self.my_param)
+
+        # device IP
+        self.declare_parameter('dvl_address', '192.168.1.99')
+        self.device_ip = self.get_parameter('dvl_address').get_parameter_value().string_value
+
+        # local (ROS) IP
+        self.declare_parameter('client_address', '192.168.1.181')
+        self.client_address = self.get_parameter('client_address').get_parameter_value().string_value
+
+        # DVL port
+        self.declare_parameter('port', 16171)
+        self.dvl_port = self.get_parameter('port').get_parameter_value().integer_value
+
+        self.get_logger().info(f"Device IP: {self.device_ip}, ROS IP: {self.client_address}, Port: {self.dvl_port}")
+
         self.dvl_publisher_ = self.create_publisher(DVL, '/dvl/data', 10)
         self.dvl_publisher_pos = self.create_publisher(DVLDR, '/dvl/position', 10)
         timer_period = 0.05  # seconds -> 10Hz
@@ -44,7 +56,12 @@ class DVL_A50(Node):
         self.oldJson = ""
         self.current_altitude = 0.0
         self.old_altitude = 0.0
+
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setblocking(False)
+        self._recv_buffer = ""
+
         self.get_logger().info("Connecting...")
         self.connect()
 
@@ -57,59 +74,85 @@ class DVL_A50(Node):
 
 	#SOCKET
     def connect(self):
-        try:
-            server_address = (self.my_param, 16171)
-            self.sock.connect(server_address)
-            self.sock.settimeout(1)
-            self.get_logger().info("Socket is connected")
-        except socket.error as err:
-            self.get_logger().info("No route to host, DVL might be booting? {}".format(err))
-            sleep(1)
-            self.connect()
-
-    def getData(self):
-        raw_data = ""
-        data = ""
-
-        while not '\n' in raw_data:
+        """Try to open a fresh socket to the DVL, retrying until it succeeds."""
+        while True:
             try:
-                rec = self.sock.recv(1) # Add timeout for that
-                data = str(rec, 'utf-8')
-                if len(rec) == 0:
-                    self.get_logger().info("Socket closed by the DVL, reopening")
-                    self.connect()
-                    continue
-                else:
-                    raw_data = raw_data + data
+                # Close any existing socket
+                try:
+                    self.sock.close()
+                except Exception:
+                    pass
+
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.sock.bind((self.client_address, 0))
+
+                server_address = (self.device_ip, self.dvl_port)
+                self.sock.settimeout(1.0)
+                self.sock.connect(server_address)
+
+                self.get_logger().info(
+                    f"Socket bound to {self.client_address} and connected to {self.device_ip}:{self.dvl_port}"
+                )
+                return  
 
             except socket.timeout as err:
-                self.get_logger().info("Lost connection with the DVL, reinitiating the connection: {}".format(err))
+                self.get_logger().warn(f"Connect timed out ({err}), retrying…")
+                time.sleep(1)
+
+            except socket.error as err:
+                self.get_logger().warn(f"Socket error ({err}); retrying…")
+                time.sleep(1)
+
+
+    def getData(self) -> str | None:
+        """
+        Read available bytes in one chunk, buffer until newline,
+        return the next complete line (without the trailing '\n'),
+        or None if no full line is ready yet.
+        """
+        try:
+            chunk = self.sock.recv(4096).decode('utf-8', errors='ignore')
+            if not chunk:
+                # remote closed the socket
+                self.get_logger().warn("Socket closed by DVL; reconnecting…")
                 self.connect()
-                continue
-    
+                return None
+            self._recv_buffer += chunk
+        except BlockingIOError:
+            # no data available right now
+            return None
+        except socket.error as e:
+            self.get_logger().warn(f"Socket error ({e}); reconnecting…")
+            self.connect()
+            return None
 
-        #raw_data = self.oldJson + raw_data
-        #self.oldJson = ""
-        #raw_data = raw_data.split('\n')
-        #self.oldJson = raw_data[1]
-        #raw_data = raw_data[0]
-        #self.get_logger().info("Data: {}".format(raw_data))
-        return raw_data
+        if '\n' in self._recv_buffer:
+            line, _sep, rest = self._recv_buffer.partition('\n')
+            self._recv_buffer = rest
+            return line
 
-    #ROS
+        return None
+
+
     def timer_callback(self):
         self.stamp = self.get_clock().now().to_msg()
-        #self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.i += 1
+        raw_line = self.getData()
+        if raw_line is None:
+            return  # no complete message yet
 
-        raw_data = self.getData()
-        data = json.loads(raw_data)
+        try:
+            data = json.loads(raw_line)
+        except json.JSONDecodeError as e:
+            self.get_logger().error(f"JSON parse error: {e}; line: {raw_line}")
+            return
 
         self.publish_data(data)
 	
     def publish_data(self, data):
 
-        theDVL.header.stamp = self.stamp
+        now = self.get_clock().now().to_msg()
+
+        theDVL.header.stamp = now
         theDVL.header.frame_id = "dvl_50_link"
 
         if 'time' in data:
@@ -121,7 +164,7 @@ class DVL_A50(Node):
             self.current_altitude = float(data["altitude"])
             theDVL.velocity_valid = data["velocity_valid"]
             
-            if self.current_altitude >= 0.0 && theDVL.velocity_valid:
+            if self.current_altitude >= 0.0 and theDVL.velocity_valid:
                 theDVL.altitude = self.current_altitude
                 self.old_altitude = self.current_altitude
             else:
@@ -164,6 +207,10 @@ class DVL_A50(Node):
             self.dvl_publisher_.publish(theDVL)
             
         if 'ts' in data:
+
+            DVLDeadReckoning.header.stamp = now
+            DVLDeadReckoning.header.frame_id = "dvl_50_link"
+
             DVLDeadReckoning.time = float(data["ts"])
             DVLDeadReckoning.position.x = float(data["x"])
             DVLDeadReckoning.position.y = float(data["y"])
